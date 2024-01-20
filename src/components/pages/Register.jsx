@@ -1,31 +1,34 @@
 import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog'
 import Box from '@mui/material/Box';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useDispatch } from "react-redux";
 import { authActions } from '../redux/slices/authSlice';
 import { connection } from '../../config/config';
+import { navigationActions } from '../redux/slices/navigationSlice';
+import { pages } from '../../util/pages';
+import { alertActions } from '../redux/slices/alertSlice';
 
 const Register = () => {
-
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const [userData, setUserData] = useState({ email: '', password: '', firstname: '', lastname: '' })
-    const dispatch = useDispatch();
+    const emailValid = emailRegex.test(userData.email)
+    const submitDisable = Object.values(userData).some(value => value == '') || !emailValid
 
-    const submitDisable = Object.values(userData).some(value => value == '')
+    const dispatch = useDispatch();
 
     const onSubmit = async (e) => {
         e.preventDefault()
         const response = await connection.register(userData);
         if (response.ok) {
-            dispatch(authActions.login())
+            const userData = await response.json()
+            dispatch(authActions.login(userData))
+            dispatch(alertActions.set({ message: "Welcome", severity: "success" }))
         } else {
-            console.log(await response.text());
+            const message = await response.text()
+            dispatch(alertActions.set({ message, severity: "error" }))
         }
     }
 
@@ -59,6 +62,7 @@ const Register = () => {
                         defaultValue={userData.email}
                         onChange={(e) => setUserData({ ...userData, email: e.target.value })}
                         required
+                        error={!emailValid}
                         fullWidth
                         id="email"
                         label="Email"
@@ -84,8 +88,7 @@ const Register = () => {
                     <Button type="submit" disabled={submitDisable} variant='contained' fullWidth>Submit</Button>
                 </Grid>
                 <Grid sx={{ mt: 1 }}>
-                    {/* TODO */}
-                    <small>Already have an account? <Link to="/login">Login Here</Link></small>
+                    <small>Already have an account? <a href="#" onClick={() => dispatch(navigationActions.set(pages.noauth[0].value))}>Login Here</a></small>
                 </Grid>
             </Grid>
         </Box>

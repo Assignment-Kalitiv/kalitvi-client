@@ -1,30 +1,32 @@
 import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog'
 import Box from '@mui/material/Box';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { useDispatch } from "react-redux";
 import { authActions } from '../redux/slices/authSlice';
 import { connection } from '../../config/config';
+import { navigationActions } from '../redux/slices/navigationSlice';
+import { pages } from '../../util/pages';
+import { alertActions } from '../redux/slices/alertSlice';
 
 const Login = () => {
 
     const [userData, setUserData] = useState({ email: '', password: '' })
-    const dispatch = useDispatch();
     const submitDisable = Object.values(userData).some(value => value == '')
+    const dispatch = useDispatch();
 
     const onSubmit = async (e) => {
         e.preventDefault()
         const response = await connection.login(userData);
         if (response.ok) {
-            dispatch(authActions.login())
+            const userData = await response.json()
+            dispatch(authActions.login(userData))
+            dispatch(alertActions.set({ message: "Welcome back", severity: "success" }))
         } else {
-            console.log(await response.text());
+            const message = await response.text()
+            dispatch(alertActions.set({ message, severity: "error" }))
         }
     }
 
@@ -59,8 +61,7 @@ const Login = () => {
                     <Button type="submit" disabled={submitDisable} variant='contained' fullWidth>Submit</Button>
                 </Grid>
                 <Grid sx={{ mt: 1 }}>
-                    {/* TODO */}
-                    <small>Have no an account? <Link to="/register">Register Here</Link></small>
+                    <small>Have no an account? <a href="#" onClick={() => dispatch(navigationActions.set(pages.noauth[1].value))}>Register Here</a></small>
                 </Grid>
             </Grid>
         </Box>

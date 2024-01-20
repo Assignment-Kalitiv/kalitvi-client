@@ -6,55 +6,39 @@ export default class Connection {
         this.#url = url;
     }
 
-    async login(userData) {
-        const response = await fetch(this.#url + '/api/login', {
-            method: 'POST',
+    async #fetchRequest(url, method, body) {
+        return await fetch(this.#url + url, {
+            method,
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(userData),
+            body,
             credentials: "include"
-        });
-        return response
+        })
+    }
+
+    async login(userData) {
+        return await this.#fetchRequest('/api/login', 'POST', JSON.stringify(userData))
     }
 
     async register(userData) {
-        const response = await fetch(this.#url + '/api/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(userData)
-        });
-        return response
+        return await this.#fetchRequest('/api/register', 'POST', JSON.stringify(userData))
     }
 
     async logout() {
-
+        return await this.#fetchRequest('/api/logout', 'POST')
     }
 
     async getUsers() {
-        const response = await fetch(this.#url + '/api/users', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFydGVtLnZvbGtvdkBhYmMuY28uaWwiLCJpZCI6MiwiaWF0IjoxNzA1Njc1OTI4fQ.cat6WWj98lxd1KIXl3WXKYvztqrgoAKFvUNFdwmhPys'
-            },
-            credentials: "include"
-        });
-        return response
+        return await this.#fetchRequest('/api/users', 'GET')
     }
 
     async editUser(id, firstname, lastname) {
-        const response = await fetch(this.#url + '/api/users/' + id, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFydGVtLnZvbGtvdkBhYmMuY28uaWwiLCJpZCI6MiwiaWF0IjoxNzA1Njc1OTI4fQ.cat6WWj98lxd1KIXl3WXKYvztqrgoAKFvUNFdwmhPys'
-            },
-            body: JSON.stringify({ firstname, lastname })
-        });
-        return response
+        return await this.#fetchRequest('/api/users/' + id, 'PUT', JSON.stringify({ firstname, lastname }))
+    }
+
+    async deleteUser(id) {
+        return await this.#fetchRequest('/api/users/' + id, 'DELETE')
     }
 
 }

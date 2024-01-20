@@ -5,7 +5,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 const EditUserForm = ({ onClose, onSubmit, selectedUser }) => {
 
@@ -17,10 +17,6 @@ const EditUserForm = ({ onClose, onSubmit, selectedUser }) => {
     const handleReset = () => {
         setUserData(defaultUserValue)
     }
-
-    useEffect(() => {
-        console.log('mount');
-    }, [])
 
     return <Dialog open onClose={onClose}>
         <DialogTitle>

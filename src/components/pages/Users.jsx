@@ -1,15 +1,26 @@
 import { useEffect, useRef, useState } from "react"
-import { connection } from '../../config/config'
+import { useDispatch } from "react-redux";
+import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import Box from '@mui/material/Box'
 import { DataGrid } from '@mui/x-data-grid';
+import { connection } from '../../config/config'
+import { useSelectorAuth } from "../redux/store";
+import { authActions } from '../redux/slices/authSlice';
 import EditUserForm from "../forms/EditUserForm";
-
+import DeleteUserForm from "../forms/DeleteUserForm";
+import { alertActions } from "../redux/slices/alertSlice";
 
 const Users = () => {
 
     const [users, setUsers] = useState([])
     const [openEdit, setOpenEdit] = useState(false)
+    const [openDelete, setOpenDelete] = useState(false)
 
+    const userData = useSelectorAuth();
     const selectedRef = useRef(null)
+    const dispatch = useDispatch();
 
     const handleOpenEditDialog = (e, cellValue) => {
         selectedRef.current = cellValue
@@ -20,18 +31,51 @@ const Users = () => {
         setOpenEdit(false)
     }
 
-    const handleSubmitForm = async (event) => {
-        event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        const response = await connection.editUser(selectedRef.current.id, formData.get('fname'), formData.get('lname'))
-        console.log(response);
-        console.log(await response.text());
-        // console.log(formData.get('fname'))
+    const handleOpenDeleteDialog = (e, cellValue) => {
+        selectedRef.current = cellValue
+        setOpenDelete(true)
     }
 
-    useEffect(() => {
-        console.log('Users render');
-    }, [])
+    const handleCloseDeleteDialog = () => {
+        setOpenDelete(false)
+    }
+
+    const handleSubmitEditForm = async (event) => {
+        event.preventDefault();
+        const selectedId = selectedRef.current.id;
+        const formData = new FormData(event.currentTarget);
+        const response = await connection.editUser(selectedId, formData.get('fname'), formData.get('lname'))
+        if (response.ok) {
+            const data = await response.json();
+            setUsers(prevUsers => {
+                const newUsers = prevUsers.map(user => user.id != selectedId ? user : data);
+                return newUsers;
+            })
+            selectedRef.current = null;
+            handleCloseEditDialog()
+            dispatch(alertActions.set({ message: "User was edited", severity: "success" }))
+        } else {
+            const message = await response.text()
+            dispatch(alertActions.set({ message, severity: "error" }))
+        }
+    }
+
+    const handleSubmitDeleteForm = async (event) => {
+        event.preventDefault();
+        const selectedId = selectedRef.current.id;
+        const response = await connection.deleteUser(selectedRef.current.id)
+        if (response.ok) {
+            setUsers(prevUsers => {
+                const newUsers = prevUsers.filter(user => user.id != selectedId);
+                return newUsers;
+            })
+            selectedRef.current = null;
+            dispatch(authActions.logout())
+        } else {
+            const message = await response.text()
+            dispatch(alertActions.set({ message, severity: "error" }))
+        }
+    }
 
     const columns = [
         { field: 'id', headerName: 'ID', width: 70 },
@@ -40,9 +84,14 @@ const Users = () => {
         { field: 'email', headerName: 'Email', width: 200 },
         {
             field: '', headerName: 'Actions', renderCell: (cellValue) => {
-                return <div>
-                    <button style={{ width: "100%" }} onClick={(e) => handleOpenEditDialog(e, cellValue)}>Edit</button>
-                </div>
+                return userData.id == cellValue.id ? <Box>
+                    <IconButton color="error" aria-label="delete" onClick={(e) => handleOpenDeleteDialog(e, cellValue)}>
+                        <DeleteIcon />
+                    </IconButton>
+                    <IconButton aria-label="edit" onClick={(e) => handleOpenEditDialog(e, cellValue)}>
+                        <EditIcon />
+                    </IconButton>
+                </Box> : null
             }
         }
     ];
@@ -59,7 +108,8 @@ const Users = () => {
 
     return <>
         <DataGrid rows={users} columns={columns} />
-        {openEdit && <EditUserForm onClose={handleCloseEditDialog} onSubmit={handleSubmitForm} selectedUser={selectedRef} />}
+        {openEdit && <EditUserForm onClose={handleCloseEditDialog} onSubmit={handleSubmitEditForm} selectedUser={selectedRef} />}
+        {openDelete && <DeleteUserForm onClose={handleCloseDeleteDialog} onSubmit={handleSubmitDeleteForm} />}
     </>
 }
 
