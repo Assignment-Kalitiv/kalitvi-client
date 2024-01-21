@@ -13,7 +13,6 @@ const Logout = () => {
     const handleLogout = async () => {
         const response = await connection.logout();
         if (response.ok) {
-            console.log(await response.text());
             dispatch(authActions.logout())
             dispatch(alertActions.set({ message: "Goodbye", severity: "info" }))
         } else {
@@ -22,9 +21,9 @@ const Logout = () => {
         }
     }
 
-    return <Box sx={{ mt: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+    return <Box sx={{ mt: 10 }}>
         <Grid container justifyContent={'center'} spacing={1}>
-            <Grid item xs={12} sm={12} md={12}>
+            <Grid item xs={12} sm={12} md={12} display={'contents'}>
                 <Button onClick={handleLogout} variant='contained'>Confirm Logout</Button>
             </Grid>
         </Grid>
