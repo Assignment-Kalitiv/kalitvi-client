@@ -12,7 +12,7 @@ import { pages } from '../../util/pages';
 import { alertActions } from '../redux/slices/alertSlice';
 
 const Register = () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
     const [userData, setUserData] = useState({ email: '', password: '', firstname: '', lastname: '' })
     const emailValid = emailRegex.test(userData.email)
     const submitDisable = Object.values(userData).some(value => value == '') || !emailValid
